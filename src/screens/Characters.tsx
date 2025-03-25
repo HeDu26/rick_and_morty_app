@@ -155,6 +155,9 @@ export default function Characters() {
     if (loading) {
       return <ActivityIndicator size="large" color="#0000ff" />;
     }
+    if (error) {
+      return <Text style={styles.footerText}>Error de solicitud.</Text>;
+    }
     if (!hasMore) {
       return <Text style={styles.footerText}>No hay más personajes.</Text>;
     }
