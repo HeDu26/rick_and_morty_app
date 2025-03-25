@@ -25,9 +25,9 @@ export default function Navigation() {
           let iconName: string = "";
 
           if (route.name === "Personajes") {
-            iconName = focused ? "bag" : "bag-outline";
+            iconName = focused ? "people" : "people-outline";
           } else if (route.name === "Favoritos") {
-            iconName = focused ? "ticket-sharp" : "ticket-outline";
+            iconName = focused ? "heart" : "heart-outline";
           }
 
           // Puedes devolver cualquier componente aquí
