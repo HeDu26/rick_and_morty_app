@@ -10,6 +10,8 @@ export const CHARACTERS = gql`
       results {
         id
         name
+        gender
+        status
         image
       }
     }
