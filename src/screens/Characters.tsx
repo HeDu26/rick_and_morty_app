@@ -9,31 +9,14 @@ import {
   ActivityIndicator,
   Dimensions,
   Image,
+  TouchableOpacity,
 } from "react-native";
 import { useQuery } from "@apollo/client";
 import { CHARACTERS } from "../graphQl/queries/rick&MortyCharacters";
-
-type CharacterInfo = {
-  count: number;
-  pages: number;
-  next: number | null;
-  prev: number | null;
-};
-
-type Character = {
-  id: string;
-  name: string;
-  image: string;
-  status: string;
-  gender: string;
-};
-
-type CharactersResponse = {
-  characters: {
-    info: CharacterInfo;
-    results: Character[];
-  };
-};
+import { Character, CharactersResponse } from "../types/characters";
+import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../store";
+import { addCharacter, removeCharacter } from "../store/charactersSlice";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width * 0.9;
@@ -42,6 +25,11 @@ export default function Characters() {
   const [page, setPage] = useState(1);
   const [allCharacters, setAllCharacters] = useState<Character[]>([]);
   const [hasMore, setHasMore] = useState(true);
+
+  const dispatch = useDispatch<AppDispatch>();
+  const characters = useSelector(
+    (state: { characters: { list: Character[] } }) => state.characters.list
+  );
 
   const { loading, error, data, fetchMore } = useQuery<CharactersResponse>(
     CHARACTERS,
@@ -87,51 +75,81 @@ export default function Characters() {
     });
   };
 
-  const renderItem: ListRenderItem<Character> = ({ item }) => (
-    <View style={styles.card}>
-      <Image source={{ uri: item.image }} style={styles.image} />
-      <View style={styles.cardContent}>
-        <Text style={styles.name}>{item.name}</Text>
+  const handleAddItem = (item: Character) => () => {
+    dispatch(addCharacter(item));
+  };
 
-        <View style={styles.infoRow}>
-          <Text style={styles.label}>Estado:</Text>
-          <View
-            style={[
-              styles.statusIndicator,
-              {
-                backgroundColor:
-                  item.status === "Alive"
-                    ? "#55cc44"
-                    : item.status === "Dead"
-                    ? "#ff4444"
-                    : "#ffaa33",
-              },
-            ]}
-          />
-          <Text style={styles.value}>
-            {item.status === "Alive"
-              ? "Vivo"
-              : item.status === "Dead"
-              ? "Muerto"
-              : "Desconocido"}
-          </Text>
-        </View>
+  const handleDeletItem = (item: Character) => () => {
+    dispatch(removeCharacter(item.id));
+  };
 
-        <View style={styles.infoRow}>
-          <Text style={styles.label}>Genero:</Text>
-          <Text style={styles.value}>
-            {item.gender === "Female"
-              ? "Femenino"
-              : item.gender === "Male"
-              ? "Masculino"
-              : item.gender === "Genderless"
-              ? "Sin genero"
-              : "Desconocido"}
-          </Text>
+  const addedCharacters = useSelector(
+    (state: RootState) => state.characters.list
+  );
+
+  const renderItem: ListRenderItem<Character> = ({ item }) => {
+    const isAdded = addedCharacters.some(
+      (char: Character) => char.id === item.id
+    );
+    return (
+      <View style={styles.card}>
+        <Image source={{ uri: item.image }} style={styles.image} />
+        <View style={styles.cardContent}>
+          <Text style={styles.name}>{item.name}</Text>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.label}>Estado:</Text>
+            <View
+              style={[
+                styles.statusIndicator,
+                {
+                  backgroundColor:
+                    item.status === "Alive"
+                      ? "#55cc44"
+                      : item.status === "Dead"
+                      ? "#ff4444"
+                      : "#ffaa33",
+                },
+              ]}
+            />
+            <Text style={styles.value}>
+              {item.status === "Alive"
+                ? "Vivo"
+                : item.status === "Dead"
+                ? "Muerto"
+                : "Desconocido"}
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.label}>Genero:</Text>
+            <Text style={styles.value}>
+              {item.gender === "Female"
+                ? "Femenino"
+                : item.gender === "Male"
+                ? "Masculino"
+                : item.gender === "Genderless"
+                ? "Sin genero"
+                : "Desconocido"}
+            </Text>
+          </View>
+
+          {/* Botón Agregar */}
+          <TouchableOpacity
+            style={[styles.addButton, isAdded ? styles.addedButton : null]}
+            onPress={!isAdded ? handleAddItem(item) : handleDeletItem(item)}
+            // disabled={isAdded}
+          >
+            <Text
+              style={isAdded ? styles.addedButtonText : styles.addButtonText}
+            >
+              {isAdded ? "Eliminar" : "Agregar"}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   const renderFooter = () => {
     if (loading) {
@@ -227,5 +245,25 @@ const styles = StyleSheet.create({
     color: "red",
     textAlign: "center",
     padding: 20,
+  },
+  addButton: {
+    marginTop: 10,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: "green",
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  addButtonText: {
+    color: "green",
+    fontWeight: "bold",
+  },
+  addedButton: {
+    borderColor: "red",
+    backgroundColor: "#f0f0f0",
+  },
+  addedButtonText: {
+    color: "red",
+    fontWeight: "bold",
   },
 });
